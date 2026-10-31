@@ -1,0 +1,13 @@
+{
+  "name": "hay-lio-hoy-ingesta",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node index.js",
+    "probar": "node index.js --dry-run"
+  },
+  "dependencies": {
+    "firebase-admin": "12.1.0"
+  }
+}
