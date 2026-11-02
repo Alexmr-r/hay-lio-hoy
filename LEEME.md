@@ -1,10 +1,3 @@
-# ¿Hay lío hoy? · España
+# ¿Hay lío hoy?
 
-Mapa en directo de manifestaciones, cortes, huelgas, disturbios y reportes de la gente en toda España.
-
-## Qué hay en la carpeta
-
-- `public/index.html`: la web entera (un solo archivo).
-- `firestore.rules`: quién puede leer y escribir en la base de datos.
-- `ingesta/`: programa que cada 10 minutos lee el Ayuntamiento de Madrid, la DGT y las noticias, y lo sube al mapa.
-- `.github/workflows/ingesta.yml`: lo ejecuta GitHub automáticamente.
+Ingesta automática de avisos. © Alejandro Moreno López. Todos los derechos reservados: no se permite copiar, modificar ni redistribuir este código ni los datos que genera sin permiso escrito.

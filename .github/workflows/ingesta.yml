@@ -9,19 +9,35 @@ concurrency:
   group: ingesta
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  pages: write      # publicar el resumen en GitHub Pages
+  id-token: write
+
 jobs:
   ingesta:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    defaults:
-      run:
-        working-directory: ingesta
+    environment:
+      name: github-pages
+      url: ${{ steps.publicar.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm install --omit=dev --no-audit --no-fund
-      - run: node index.js
+        working-directory: ingesta
+      - id: generar
+        run: node index.js
+        working-directory: ingesta
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      # Solo se publica si el resumen ha cambiado (así no se hace un despliegue cada 10 minutos sin motivo).
+      - if: steps.generar.outputs.cambiado == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ingesta/salida
+      - if: steps.generar.outputs.cambiado == 'true'
+        id: publicar
+        uses: actions/deploy-pages@v4
