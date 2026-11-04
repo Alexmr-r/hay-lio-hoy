@@ -2,8 +2,8 @@ name: Ingesta automática
 
 on:
   schedule:
-    - cron: '*/10 * * * *'   # cada 10 minutos (GitHub a veces se retrasa unos minutos)
-  workflow_dispatch: {}       # botón para lanzarla a mano
+    - cron: '*/10 * * * *'   # respaldo: GitHub retrasa mucho los programados (a veces horas)
+  workflow_dispatch: {}       # la cadena de abajo y el botón manual
 
 concurrency:
   group: ingesta
@@ -13,11 +13,12 @@ permissions:
   contents: read
   pages: write      # publicar el resumen en GitHub Pages
   id-token: write
+  actions: write    # para que cada pasada lance la siguiente
 
 jobs:
   ingesta:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     environment:
       name: github-pages
       url: ${{ steps.publicar.outputs.page_url }}
@@ -33,7 +34,7 @@ jobs:
         working-directory: ingesta
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-      # Solo se publica si el resumen ha cambiado (así no se hace un despliegue cada 10 minutos sin motivo).
+      # Solo se publica si el resumen ha cambiado.
       - if: steps.generar.outputs.cambiado == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
@@ -41,3 +42,19 @@ jobs:
       - if: steps.generar.outputs.cambiado == 'true'
         id: publicar
         uses: actions/deploy-pages@v4
+
+  # Cadena: espera y lanza la siguiente pasada (cada ~10 min de verdad). Si ya hay una en cola, no lanza otra.
+  siguiente:
+    needs: ingesta
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - run: sleep 420
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          pendientes=$(gh run list --workflow ingesta.yml --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="pending" or .status=="waiting" or .status=="requested")] | length')
+          echo "En cola: $pendientes"
+          if [ "$pendientes" = "0" ]; then gh workflow run ingesta.yml; else echo "Ya hay una pasada en cola"; fi
