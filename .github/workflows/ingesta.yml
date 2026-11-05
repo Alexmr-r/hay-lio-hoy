@@ -34,6 +34,8 @@ jobs:
         working-directory: ingesta
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          AZURE_TRANSLATOR_KEY: ${{ secrets.AZURE_TRANSLATOR_KEY }}
+          AZURE_TRANSLATOR_REGION: ${{ secrets.AZURE_TRANSLATOR_REGION }}
       # Solo se publica si el resumen ha cambiado.
       - if: steps.generar.outputs.cambiado == 'true'
         uses: actions/upload-pages-artifact@v3
